@@ -1,0 +1,256 @@
+// I wrote the following SQL query to extract all the relevant tables in- 
+
+select * 
+from [Northwind].[Categories]
+
+select * 
+from [Northwind].[Customers] 
+
+select * 
+from [Northwind].[Employees]
+
+select * 
+from [Northwind].[EmployeeTerritories]
+
+select * 
+from [Northwind].[Order Details]
+
+select * 
+from [Northwind].[Orders]
+
+select * 
+from [Northwind].[Products]
+
+select * 
+from [Northwind].[Region]
+
+select * 
+from [Northwind].[Shippers]
+
+select * 
+from [Northwind].[Suppliers]
+
+select *
+from [Northwind].[Territories]
+
+// Analysis of profitability by year after various downloads
+
+SELECT 
+    YEAR(O.OrderDate) AS OrderYear,
+    SUM(OD.Quantity * OD.UnitPrice) AS GrossRevenue, 
+    SUM(OD.Quantity * (OD.UnitPrice * (1 - OD.Discount))) AS RevenueAfterDiscount,  
+    SUM(OD.Quantity * ((OD.UnitPrice * (1 - OD.Discount)) - P.UnitPrice)) AS NetProfit  
+FROM 
+    [Northwind].[Orders] O
+INNER JOIN 
+    [Northwind].[Order Details] OD ON O.OrderID = OD.OrderID
+INNER JOIN 
+    [Northwind].[Products] P ON OD.ProductID = P.ProductID
+GROUP BY 
+    YEAR(O.OrderDate)
+ORDER BY 
+    OrderYear;
+
+// Profit analysis by year and month
+SELECT 
+    YEAR(O.OrderDate) AS OrderYear,
+    DATENAME(MONTH, O.OrderDate) AS OrderMonth,
+    SUM(OD.Quantity * OD.UnitPrice) AS GrossRevenue,  
+    SUM(OD.Quantity * (OD.UnitPrice * (1 - OD.Discount))) AS RevenueAfterDiscount,  
+    SUM(OD.Quantity * ((OD.UnitPrice * (1 - OD.Discount)) - P.UnitPrice)) AS NetProfit  
+FROM 
+    [Northwind].[Orders] O
+INNER JOIN 
+    [Northwind].[Order Details] OD ON O.OrderID = OD.OrderID
+INNER JOIN 
+    [Northwind].[Products] P ON OD.ProductID = P.ProductID
+GROUP BY 
+    YEAR(O.OrderDate), 
+    DATENAME(MONTH, O.OrderDate),
+    MONTH(O.OrderDate)
+ORDER BY 
+    OrderYear, 
+    MONTH(O.OrderDate);
+
+// Profitability analysis of products
+
+SELECT
+    C.CategoryID,
+    C.CategoryName,
+    P.ProductID,
+    P.ProductName,
+    SUM(OD.Quantity) AS TotalQuantitySold,
+    SUM(OD.Quantity * OD.UnitPrice) AS GrossProfit, 
+    SUM(OD.Quantity * (OD.UnitPrice * (1 - OD.Discount))) AS ProfitAfterDiscount, 
+    SUM(OD.Quantity * ((OD.UnitPrice * (1 - OD.Discount)) - P.UnitPrice)) AS ProfitAfterDiscountAndCost  
+FROM
+    [Northwind].[Order Details] OD
+INNER JOIN
+    [Northwind].[Products] P ON OD.ProductID = P.ProductID
+INNER JOIN
+    [Northwind].[Categories] C ON P.CategoryID = C.CategoryID
+GROUP BY
+    C.CategoryID,
+    C.CategoryName,
+    P.ProductID,
+    P.ProductName
+ORDER BY
+    C.CategoryID,
+    P.ProductName;
+// The number of products and orders by year and month
+
+SELECT 
+    YEAR(O.OrderDate) AS OrderYear,
+    MONTH(O.OrderDate) AS OrderMonth,
+    DATENAME(month, O.OrderDate) AS MonthName,
+    COUNT(DISTINCT O.OrderID) AS TotalOrders,
+    SUM(OD.Quantity) AS TotalQuantitySold
+FROM 
+    [Northwind].[Order Details] OD
+INNER JOIN 
+    [Northwind].[Orders] O ON OD.OrderID = O.OrderID
+GROUP BY 
+    YEAR(O.OrderDate), 
+    MONTH(O.OrderDate),
+    DATENAME(month, O.OrderDate)
+ORDER BY 
+    OrderYear, 
+    OrderMonth;
+
+// Category and product analysis 
+
+SELECT
+    C.CategoryID,
+    C.CategoryName,
+    SUM(OD.Quantity) AS TotalProductsSold,  
+    SUM(OD.Quantity * OD.UnitPrice) AS GrossProfit,
+    SUM(OD.Quantity * (OD.UnitPrice * (1 - OD.Discount))) AS ProfitAfterDiscount, 
+    SUM(OD.Quantity * ((OD.UnitPrice * (1 - OD.Discount)) - P.UnitPrice)) AS ProfitAfterDiscountAndCost
+
+FROM
+    [Northwind].[Order Details] OD
+INNER JOIN
+    [Northwind].[Products] P ON OD.ProductID = P.ProductID
+INNER JOIN
+    [Northwind].[Categories] C ON P.CategoryID = C.CategoryID
+GROUP BY
+    C.CategoryID, C.CategoryName
+ORDER BY
+    C.CategoryID;
+
+// Profit by Country and company
+
+SELECT
+    CU.Country,
+    COUNT(DISTINCT CU.CustomerID) AS NumberOfCustomers,
+    CU.CustomerID,
+    CU.CompanyName,
+    SUM(OD.Quantity * OD.UnitPrice) AS GrossProfit,  
+    SUM(OD.Quantity * (OD.UnitPrice * (1 - OD.Discount))) AS ProfitAfterDiscount,  
+    SUM(OD.Quantity * ((OD.UnitPrice * (1 - OD.Discount)) - P.UnitPrice)) AS ProfitAfterDiscountAndCost  
+FROM
+    [Northwind].[Orders] O
+INNER JOIN
+    [Northwind].[Customers] CU ON O.CustomerID = CU.CustomerID
+INNER JOIN
+    [Northwind].[Order Details] OD ON O.OrderID = OD.OrderID
+INNER JOIN
+    [Northwind].[Products] P ON OD.ProductID = P.ProductID
+GROUP BY
+    CU.Country,
+    CU.CustomerID,
+    CU.CompanyName
+ORDER BY
+    CU.Country,
+    CU.CompanyName;
+
+// orders by Country 
+SELECT
+    CU.Country,
+    COUNT(O.OrderID) AS NumberOfOrders
+FROM
+    [Northwind].[Orders] O
+INNER JOIN
+    [Northwind].[Customers] CU ON O.CustomerID = CU.CustomerID
+GROUP BY
+    CU.Country
+ORDER BY
+    CU.Country;
+
+// Customer behavior analysis
+SELECT 
+    C.CustomerID, 
+    C.CompanyName, 
+    SUM(OD.Quantity * OD.UnitPrice) AS GrossRevenue, 
+    SUM(OD.Quantity * OD.UnitPrice * (1 - OD.Discount)) AS RevenueAfterDiscount, 
+    SUM(OD.Quantity * (OD.UnitPrice * (1 - OD.Discount) - P.UnitPrice)) AS ProfitAfterDiscountAndCost 
+FROM 
+    [Northwind].[Order Details] OD
+INNER JOIN 
+    [Northwind].[Orders] O ON OD.OrderID = O.OrderID
+INNER JOIN 
+    [Northwind].[Customers] C ON O.CustomerID = C.CustomerID
+INNER JOIN
+    [Northwind].[Products] P ON OD.ProductID = P.ProductID
+GROUP BY 
+    C.CustomerID, C.CompanyName
+ORDER BY 
+    GrossRevenue DESC;
+
+
+// Employee performance analysis
+
+SELECT 
+    E.EmployeeID,
+    E.LastName + ', ' + E.FirstName AS EmployeeName,
+    SUM(OD.Quantity * OD.UnitPrice) AS TotalSales,
+    SUM(OD.Quantity * OD.UnitPrice) AS GrossProfit, 
+    SUM(OD.Quantity * OD.UnitPrice * (1 - OD.Discount)) AS ProfitAfterDiscount, 
+    SUM(OD.Quantity * (OD.UnitPrice * (1 - OD.Discount) - P.UnitPrice)) AS ProfitAfterDiscountAndCost 
+FROM 
+    [Northwind].[Order Details] OD
+INNER JOIN 
+    [Northwind].[Orders] O ON OD.OrderID = O.OrderID
+INNER JOIN 
+    [Northwind].[Employees] E ON O.EmployeeID = E.EmployeeID
+INNER JOIN 
+    [Northwind].[Products] P ON OD.ProductID = P.ProductID
+GROUP BY 
+    E.EmployeeID, E.LastName, E.FirstName
+ORDER BY 
+    TotalSales DESC;
+
+// Supplier analysis
+WITH ProductProfits AS (
+    SELECT 
+        S.SupplierID,
+        S.CompanyName AS SupplierName, 
+        P.ProductID,
+        P.ProductName,
+        SUM(OD.Quantity * OD.UnitPrice) AS GrossProfit, 
+        SUM(OD.Quantity * OD.UnitPrice * (1 - OD.Discount)) AS ProfitAfterDiscount, 
+        SUM(OD.Quantity * ((OD.UnitPrice * (1 - OD.Discount)) - P.UnitPrice)) AS ProfitAfterDiscountAndCost 
+    FROM 
+        [Northwind].[Order Details] OD
+    INNER JOIN 
+        [Northwind].[Products] P ON OD.ProductID = P.ProductID
+    INNER JOIN 
+        [Northwind].[Suppliers] S ON P.SupplierID = S.SupplierID
+    GROUP BY 
+        S.SupplierID, S.CompanyName, P.ProductID, P.ProductName
+)
+SELECT
+    SupplierID,
+    SupplierName, 
+    ProductID,
+    ProductName,
+    GrossProfit,
+    ProfitAfterDiscount,
+    ProfitAfterDiscountAndCost
+FROM
+    ProductProfits
+ORDER BY
+    SupplierID, ProfitAfterDiscountAndCost DESC;
+
+
+
